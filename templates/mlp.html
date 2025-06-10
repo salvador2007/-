@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>MLP 학습 결과</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { font-family: sans-serif; background: #eef2ff; padding: 40px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.1); text-align:center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 MLP 분류기 학습</h1>
+        {% if accuracy is not none %}
+        <p>테스트 정확도: <strong>{{ accuracy }}%</strong></p>
+        {% else %}
+        <p>학습할 데이터가 부족합니다.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

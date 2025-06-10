@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>얼굴 클러스터링</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { font-family: sans-serif; background: #f3f4f8; padding: 40px; }
+        .container { max-width: 960px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        img { width: 100%; margin-top: 20px; border-radius: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👥 얼굴 임베딩 클러스터링</h1>
+        {% if cluster_plot %}
+        <img src="data:image/png;base64,{{ cluster_plot }}" alt="클러스터링 결과">
+        {% else %}
+        <p>데이터가 부족하거나 오류가 발생했습니다.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -157,6 +157,7 @@ def init_db():
                 genres TEXT,
                 filename_hash TEXT,
                 face_shape TEXT DEFAULT 'Unknown',
+                embedding TEXT,
                 ip_address TEXT,
                 user_agent TEXT
             )
@@ -165,6 +166,11 @@ def init_db():
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON analysis_results(timestamp)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_emotion ON analysis_results(emotion)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_filename_hash ON analysis_results(filename_hash)')
+        # 기존 DB에 embedding 컬럼이 없을 수 있으므로 추가 시도
+        try:
+            cursor.execute("ALTER TABLE analysis_results ADD COLUMN embedding TEXT")
+        except sqlite3.OperationalError:
+            pass
         conn.commit()
         conn.close()
         logger.info("Database initialized successfully")
@@ -256,6 +262,22 @@ def analyze_face(image_path):
             'emotion_scores': {'neutral': 100}
         }
 
+def get_face_embedding(image_path):
+    """DeepFace 임베딩 추출"""
+    if not DEEPFACE_AVAILABLE:
+        return ""
+    try:
+        rep = DeepFace.represent(img_path=image_path, enforce_detection=False)
+        if isinstance(rep, list):
+            rep = rep[0]
+        if isinstance(rep, dict) and 'embedding' in rep:
+            rep = rep['embedding']
+        vector = [float(x) for x in rep]
+        return ",".join(f"{v:.6f}" for v in vector)
+    except Exception as e:
+        logger.error(f"Embedding extract error: {e}")
+        return ""
+
 @app.errorhandler(404)
 def page_not_found(e):
     logger.warning(f"404 error for {request.url}")
@@ -328,6 +350,7 @@ def upload_file():
         try:
             analysis_result = analyze_face(temp_path)
             face_shape, face_prob = predict_face_shape(temp_path)
+            embedding_str = get_face_embedding(temp_path)
             selected_genres = request.form.getlist('genre')
             allowed_genres = ['액션', '코미디', '드라마', '공포', '로맨스', 'SF', '다큐멘터리', '애니메이션']
             selected_genres = [g for g in selected_genres if g in allowed_genres]
@@ -339,8 +362,8 @@ def upload_file():
             cursor.execute('''
                 INSERT INTO analysis_results
                 (timestamp, age, gender, gender_confidence, emotion, emotion_confidence,
-                emotion_scores, genres, filename_hash, face_shape, ip_address, user_agent)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                emotion_scores, genres, filename_hash, face_shape, embedding, ip_address, user_agent)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 analysis_result['age'],
@@ -352,6 +375,7 @@ def upload_file():
                 genres_str,
                 file_hash,
                 face_shape,
+                embedding_str,
                 client_ip,
                 user_agent
             ))
@@ -452,6 +476,25 @@ def admin():
         logger.error(f'관리자 페이지 데이터 로드 중 오류: {str(e)}')
         flash('데이터를 불러오는 중 오류가 발생했습니다.', 'error')
         return render_template('admin.html', table_html='<p>데이터를 불러올 수 없습니다.</p>')
+
+@app.route('/export')
+def export_csv():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql_query("SELECT * FROM analysis_results", conn)
+        conn.close()
+        csv_data = df.to_csv(index=False)
+        return app.response_class(
+            csv_data,
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename="analysis_results.csv"'}
+        )
+    except Exception as e:
+        logger.error(f'CSV export error: {e}')
+        flash('CSV 생성 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('admin'))
 
 @app.route('/graph')
 def graph():
