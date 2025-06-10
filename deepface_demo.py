@@ -1,23 +1,40 @@
 import os
-import requests
+import argparse
+
 from deepface import DeepFace
 
 
-def download_image(url, filename):
-    resp = requests.get(url, timeout=10)
-    resp.raise_for_status()
-    with open(filename, 'wb') as f:
-        f.write(resp.content)
+def main() -> None:
+    """Analyze a local image with DeepFace using offline weights."""
+    parser = argparse.ArgumentParser(description="Analyze an image with DeepFace")
+    parser.add_argument(
+        "image",
+        help="Path to the image file to analyze",
+    )
+    parser.add_argument(
+        "--weights-dir",
+        dest="weights_dir",
+        default=None,
+        help=(
+            "Directory containing pre-downloaded DeepFace weights. "
+            "If set, the path will be used as DEEPFACE_HOME."
+        ),
+    )
+    args = parser.parse_args()
 
+    if args.weights_dir:
+        os.environ["DEEPFACE_HOME"] = os.path.abspath(args.weights_dir)
 
-def main():
-    img_url = "https://raw.githubusercontent.com/serengil/deepface/master/tests/dataset/img1.jpg"
-    local_path = "sample.jpg"
-    if not os.path.exists(local_path):
-        print("Downloading sample image...")
-        download_image(img_url, local_path)
+    img_path = args.image
+    if not os.path.exists(img_path):
+        raise FileNotFoundError(f"Image not found: {img_path}")
+
     print("Analyzing image with DeepFace...")
-    result = DeepFace.analyze(img_path=local_path, actions=["age", "gender", "emotion"], enforce_detection=False)
+    result = DeepFace.analyze(
+        img_path=img_path,
+        actions=["age", "gender", "emotion"],
+        enforce_detection=False,
+    )
     print(result)
 
 
