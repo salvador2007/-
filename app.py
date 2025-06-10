@@ -464,47 +464,10 @@ def graph():
                             face_plot=face_plot)
     except Exception as e:
         logger.error(f"Graph generation error: {e}")
-        return render_template('graph.html', 
-                            genre_plot="", 
-                            emotion_plot="", 
+        return render_template('graph.html',
+                            genre_plot="",
+                            emotion_plot="",
                             face_plot="")
-    
-    
-@app.route('/correlation') 
-def correlation():
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        df = pd.read_sql_query("SELECT * FROM analysis_results", conn)
-        conn.close()
-        cols = ["age", "emotion", "face_shape", "genres"]
-        for col in cols:
-            if col not in df.columns:
-                df[col] = None
-        df_clean = df[cols].dropna()
-        if df_clean.empty:
-            return render_template("correlation.html", correlation_plot="")
-        # 범주형 변수 원-핫 인코딩
-        df_encoded = pd.get_dummies(df_clean, columns=["emotion", "face_shape", "genres"])
-        corr = df_encoded.corr().round(2)
-        import matplotlib
-        matplotlib.rcParams['font.family'] = 'Malgun Gothic'
-        matplotlib.rcParams['axes.unicode_minus'] = False
-        plt.figure(figsize=(10, 8))
-        sns.heatmap(corr, cmap="coolwarm", annot=True, fmt=".2f", cbar=True)
-        plt.title("얼굴형/감정/장르 상관관계 히트맵", fontsize=14)
-        plt.tight_layout()
-        buffer = BytesIO()
-        plt.savefig(buffer, format='png')
-        buffer.seek(0)
-        plot_data = base64.b64encode(buffer.getvalue()).decode()
-        buffer.close()
-        plt.close()
-        return render_template("correlation.html", correlation_plot=plot_data)
-    except Exception as e:
-        print(f"Correlation error: {e}")
-        return render_template("correlation.html", correlation_plot="")
-
-
 
 def create_genre_plot(df):
     try:
