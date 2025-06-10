@@ -1,7 +1,3 @@
-{
-  "python.createEnvironment.trigger": "off"
-}
-```수동으로 venv를 만들고, Python 인터프리터를 선택하려면 **Python: Select Interpreter** 명령을 사용하세요.
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 from tensorflow import keras
@@ -305,6 +301,9 @@ class ImprovedImageGenerator(tf.keras.utils.Sequence):
         """클래스 가중치 계산"""
         try:
             unique_labels = np.unique(self.labels)
+            if len(unique_labels) < 2:
+                logger.warning("클래스가 1개뿐입니다. 클래스 가중치 계산이 무의미합니다.")
+                return {}
             class_weights = compute_class_weight(
                 'balanced', classes=unique_labels, y=self.labels
             )
@@ -358,18 +357,14 @@ class ImprovedImageGenerator(tf.keras.utils.Sequence):
         """이미지 로드 및 전처리 개선"""
         image_path = self.image_paths[idx]
         cache_key = hashlib.md5(image_path.encode()).hexdigest()[:16]  # 짧은 해시
-        
+
         # 캐시 확인
         if cache_key in self.image_cache:
             return self.image_cache[cache_key].copy()
-        
+
         try:
-            # OpenCV로 이미지 로드 시도
-            img_array = cv2.imdecode(
-                np.fromfile(image_path, dtype=np.uint8), 
-                cv2.IMREAD_COLOR
-            )
-            
+            # 크로스플랫폼 호환: cv2.imread 우선 사용
+            img_array = cv2.imread(image_path)
             if img_array is None:
                 # PIL로 대체 시도
                 with Image.open(image_path) as img:
@@ -379,16 +374,16 @@ class ImprovedImageGenerator(tf.keras.utils.Sequence):
             else:
                 # BGR to RGB 변환
                 img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
-            
+
             # 리사이즈
             img_array = cv2.resize(img_array, self.target_size, interpolation=cv2.INTER_AREA)
-            
+
             # 캐시에 저장 (제한된 수만)
             if len(self.image_cache) < self.cache_size:
                 self.image_cache[cache_key] = img_array.copy()
-            
+
             return img_array
-            
+
         except Exception as e:
             logger.warning(f"이미지 로드 실패: {image_path} - {e}")
             return None
@@ -649,7 +644,7 @@ def create_data_generators(data_dir, batch_size=16, validation_split=0.2, target
     logger.info(f"📈 학습 샘플: {len(train_paths)}개")
     logger.info(f"📊 검증 샘플: {len(val_paths)}개")
     
-        # 제너레이터 생성
+    # 제너레이터 생성
     train_gen = ImprovedImageGenerator(
         train_paths, train_labels, class_names, batch_size,
         target_size=target_size, augment=True, class_weights=class_weight_dict

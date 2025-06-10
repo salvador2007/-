@@ -88,13 +88,15 @@ def predict_face_shape(img_path):
         logger.error(f"얼굴형 예측 오류: {e}")
         return "Unknown", 0.0
 
-# DeepFace 임포트를 try-catch로 감싸서 에러 처리
+# DeepFace 임포트 및 에러 메시지 저장
+deepface_import_error = None
 try:
     from deepface import DeepFace
     DEEPFACE_AVAILABLE = True
-except ImportError:
+except Exception as e:
     DEEPFACE_AVAILABLE = False
-    logging.warning("DeepFace not available. Face analysis will use mock data.")
+    deepface_import_error = str(e)
+    logging.warning(f"DeepFace not available. Face analysis will use mock data. ImportError: {e}")
 
 app = Flask(__name__)
 
@@ -310,6 +312,9 @@ def health_check():
 
 @app.route('/')
 def index():
+    # DeepFace import 실패 시, 사용자에게 실제 에러 메시지 안내
+    if not DEEPFACE_AVAILABLE:
+        flash(f"DeepFace library is not installed or failed to import.<br><small>{deepface_import_error}</small>", "error")
     return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
@@ -523,6 +528,20 @@ def graph():
 
 def create_genre_plot(df):
     try:
+        # 한글 폰트 설정 (그래프 그릴 때마다 적용)
+        import matplotlib
+        import matplotlib.font_manager as fm
+        available_fonts = {f.name for f in fm.fontManager.ttflist}
+        if 'Malgun Gothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'Malgun Gothic'
+        elif 'AppleGothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'AppleGothic'
+        elif 'NanumGothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'NanumGothic'
+        else:
+            matplotlib.rcParams['font.family'] = 'DejaVu Sans'
+        matplotlib.rcParams['axes.unicode_minus'] = False
+
         genre_data = []
         for genres_str in df['genres'].dropna():
             if genres_str and len(str(genres_str)) < 1000:
@@ -550,6 +569,20 @@ def create_genre_plot(df):
 
 def create_emotion_plot(df):
     try:
+        # 한글 폰트 설정 (그래프 그릴 때마다 적용)
+        import matplotlib
+        import matplotlib.font_manager as fm
+        available_fonts = {f.name for f in fm.fontManager.ttflist}
+        if 'Malgun Gothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'Malgun Gothic'
+        elif 'AppleGothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'AppleGothic'
+        elif 'NanumGothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'NanumGothic'
+        else:
+            matplotlib.rcParams['font.family'] = 'DejaVu Sans'
+        matplotlib.rcParams['axes.unicode_minus'] = False
+
         emotion_genre_data = []
         for _, row in df.iterrows():
             if (pd.notna(row['emotion']) and pd.notna(row['genres']) and 
@@ -589,6 +622,20 @@ def create_emotion_plot(df):
 
 def create_face_plot(df):
     try:
+        # 한글 폰트 설정 (그래프 그릴 때마다 적용)
+        import matplotlib
+        import matplotlib.font_manager as fm
+        available_fonts = {f.name for f in fm.fontManager.ttflist}
+        if 'Malgun Gothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'Malgun Gothic'
+        elif 'AppleGothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'AppleGothic'
+        elif 'NanumGothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'NanumGothic'
+        else:
+            matplotlib.rcParams['font.family'] = 'DejaVu Sans'
+        matplotlib.rcParams['axes.unicode_minus'] = False
+
         face_data = df[df['face_shape'] != 'Unknown']
         if face_data.empty:
             return ""

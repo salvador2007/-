@@ -4,3 +4,4 @@ Pillow==9.0.0
 opencv-python==4.9.0.80
 tensorflow==2.13.1
 keras==2.13.1
+deepface>=0.0.79
