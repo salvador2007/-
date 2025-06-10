@@ -130,9 +130,11 @@ logger = logging.getLogger(__name__)
 load_face_shape_model()
 
 # 한글 폰트 설정 (에러 방지)
-try:
+import matplotlib.font_manager as fm
+available_fonts = {f.name for f in fm.fontManager.ttflist}
+if 'Malgun Gothic' in available_fonts:
     plt.rcParams['font.family'] = 'Malgun Gothic'
-except Exception:
+else:
     plt.rcParams['font.family'] = 'DejaVu Sans'
 plt.rcParams['axes.unicode_minus'] = False
 

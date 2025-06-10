@@ -32,7 +32,12 @@ def correlation():
 
         # 한글 폰트 설정
         import matplotlib
-        matplotlib.rcParams['font.family'] = 'Malgun Gothic'
+        import matplotlib.font_manager as fm
+        available_fonts = {f.name for f in fm.fontManager.ttflist}
+        if 'Malgun Gothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'Malgun Gothic'
+        else:
+            matplotlib.rcParams['font.family'] = 'DejaVu Sans'
         matplotlib.rcParams['axes.unicode_minus'] = False
 
         # 히트맵 그리기
