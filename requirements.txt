@@ -4,7 +4,7 @@ gunicorn==21.2.0
 flask-wtf==1.1.1
 
 # 이미지 처리 및 AI
-deepface==0.0.79
+deepface @ git+https://github.com/serengil/deepface.git
 opencv-python-headless==4.8.0.76
 tensorflow-cpu==2.13.0
 tf-keras==2.13.0
