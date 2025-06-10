@@ -19,9 +19,13 @@ import numpy as np
 from PIL import Image
 
 # 모델 경로
-FACE_MODEL_JSON = 'face_shape_optimized_model_architecture.json'
-FACE_MODEL_WEIGHTS = 'best_face_shape_optimized_model_01_0.1990.weights.h5'  # 최신/best로 수정
-CLASS_INDICES = 'class_indices.json'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, 'models')
+CHECKPOINT_DIR = os.path.join(BASE_DIR, 'checkpoints')
+
+FACE_MODEL_JSON = os.path.join(MODEL_DIR, 'face_shape_optimized_model_architecture.json')
+FACE_MODEL_WEIGHTS = os.path.join(CHECKPOINT_DIR, 'best_face_shape_optimized_model_01_0.1990.weights.h5')
+CLASS_INDICES = os.path.join(MODEL_DIR, 'class_indices.json')
 
 # 전역 모델, 클래스명
 face_shape_model = None
@@ -31,17 +35,30 @@ def load_face_shape_model():
     global face_shape_model, face_shape_classes
     if face_shape_model is not None and face_shape_classes:
         return  # 이미 로드됨
-    with open(FACE_MODEL_JSON, encoding='utf-8') as f:
-        face_shape_model = keras.models.model_from_json(f.read())
-    face_shape_model.load_weights(FACE_MODEL_WEIGHTS)
-    with open(CLASS_INDICES, encoding='utf-8') as f:
-        index_map = json.load(f)
-        face_shape_classes.clear()
-        for k, v in sorted(index_map.items(), key=lambda x: x[1]):
-            face_shape_classes.append(k)
-load_face_shape_model()
+    if not (os.path.exists(FACE_MODEL_JSON) and os.path.exists(FACE_MODEL_WEIGHTS)):
+        logger.warning("Face shape model files not found. Feature disabled.")
+        face_shape_model = None
+        face_shape_classes = []
+        return
+    try:
+        with open(FACE_MODEL_JSON, encoding='utf-8') as f:
+            face_shape_model = keras.models.model_from_json(f.read())
+        face_shape_model.load_weights(FACE_MODEL_WEIGHTS)
+        if os.path.exists(CLASS_INDICES):
+            with open(CLASS_INDICES, encoding='utf-8') as f:
+                index_map = json.load(f)
+            face_shape_classes.clear()
+            for k, v in sorted(index_map.items(), key=lambda x: x[1]):
+                face_shape_classes.append(k)
+        logger.info("Face shape model loaded")
+    except Exception as e:
+        logger.error(f"Face shape model load error: {e}")
+        face_shape_model = None
+        face_shape_classes = []
 
 def predict_face_shape(img_path):
+    if face_shape_model is None:
+        return "Unknown", 0.0
     try:
         # 이미지 불러오기 & 전처리 (224x224, RGB, 정규화)
         img = Image.open(img_path).convert("RGB").resize((224, 224))
