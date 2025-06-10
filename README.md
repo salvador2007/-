@@ -6,7 +6,8 @@
 
 ## 실행 방법
 
-1. Python 3.9 이상이 설치되어 있어야 합니다.
+1. **Python 3.9 ~ 3.10 환경을 권장합니다.**
+   DeepFace와 TensorFlow가 Python 3.12에서는 설치되지 않을 수 있습니다.
 2. 의존성 설치:
    ```bash
    pip install -r requirements.txt
@@ -17,4 +18,5 @@
    ```
 4. 브라우저에서 `http://localhost:5000` 으로 접속하여 서비스를 이용합니다.
 
-모델 파일이 없을 경우 얼굴형 분류 기능은 비활성화됩니다.
+`models/class_indices.json` 파일이 없으면 기본 라벨을 사용합니다.
+DeepFace가 설치되어 있지 않으면 업로드 시 오류 메시지가 표시됩니다.

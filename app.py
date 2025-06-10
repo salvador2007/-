@@ -27,6 +27,17 @@ FACE_MODEL_JSON = os.path.join(MODEL_DIR, 'face_shape_optimized_model_architectu
 FACE_MODEL_WEIGHTS = os.path.join(CHECKPOINT_DIR, 'best_face_shape_optimized_model_01_0.1990.weights.h5')
 CLASS_INDICES = os.path.join(MODEL_DIR, 'class_indices.json')
 
+# 기본 얼굴형 라벨 (class_indices.json이 없을 때 사용)
+DEFAULT_FACE_SHAPE_CLASSES = [
+    "Heart",
+    "Long",
+    "Oblong",
+    "Oval",
+    "Round",
+    "Square",
+    "Triangle",
+]
+
 # 전역 모델, 클래스명
 face_shape_model = None
 face_shape_classes = []
@@ -50,6 +61,10 @@ def load_face_shape_model():
             face_shape_classes.clear()
             for k, v in sorted(index_map.items(), key=lambda x: x[1]):
                 face_shape_classes.append(k)
+        else:
+            # class_indices.json이 없을 경우 기본 라벨 사용
+            face_shape_classes[:] = DEFAULT_FACE_SHAPE_CLASSES
+            logger.warning("class_indices.json not found. Using default labels.")
         logger.info("Face shape model loaded")
     except Exception as e:
         logger.error(f"Face shape model load error: {e}")
@@ -195,22 +210,11 @@ def sanitize_user_agent():
     return user_agent[:500]  # 길이 제한
 
 def analyze_face(image_path):
-    """얼굴 분석 함수 (DeepFace 사용 또는 모의 데이터)"""
+    """얼굴 분석 함수 (DeepFace 사용)"""
     if not DEEPFACE_AVAILABLE:
-        import random
-        emotions = ['happy', 'sad', 'angry', 'surprise', 'fear', 'disgust', 'neutral']
-        genders = ['Man', 'Woman']
-        dominant_emotion = random.choice(emotions)
-        emotion_scores = {emotion: random.uniform(0, 100) for emotion in emotions}
-        emotion_scores[dominant_emotion] = max(emotion_scores[dominant_emotion], 70)
-        return {
-            'age': random.randint(18, 65),
-            'gender': random.choice(genders),
-            'gender_confidence': random.uniform(70, 95),
-            'emotion': dominant_emotion,
-            'emotion_confidence': emotion_scores[dominant_emotion],
-            'emotion_scores': emotion_scores
-        }
+        raise RuntimeError(
+            "DeepFace library is not installed. Install requirements for accurate analysis."
+        )
     try:
         analysis = DeepFace.analyze(
             img_path=image_path,
@@ -331,8 +335,8 @@ def upload_file():
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO analysis_results 
-                (timestamp, age, gender, gender_confidence, emotion, emotion_confidence, 
+                INSERT INTO analysis_results
+                (timestamp, age, gender, gender_confidence, emotion, emotion_confidence,
                 emotion_scores, genres, filename_hash, face_shape, ip_address, user_agent)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
@@ -361,6 +365,9 @@ def upload_file():
                 emotion_scores=analysis_result['emotion_scores'],
                 selected_genres=selected_genres,
                 face_shape=face_shape)
+        except RuntimeError as e:
+            flash(str(e), 'error')
+            return redirect(url_for('index'))
         finally:
             try:
                 os.unlink(temp_path)
