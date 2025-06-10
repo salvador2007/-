@@ -19,55 +19,38 @@ import numpy as np
 from PIL import Image
 
 # 모델 경로
-# 모델 파일이 위치한 디렉터리 경로를 명시적으로 지정한다
-FACE_MODEL_JSON = os.path.join('models', 'face_shape_optimized_model_architecture.json')
-FACE_MODEL_WEIGHTS = os.path.join('checkpoints', 'best_face_shape_optimized_model_01_0.1990.weights.h5')
-CLASS_INDICES = os.path.join('models', 'class_indices.json')
+FACE_MODEL_JSON = 'face_shape_optimized_model_architecture.json'
+FACE_MODEL_WEIGHTS = 'best_face_shape_optimized_model_01_0.1990.weights.h5'  # 최신/best로 수정
+CLASS_INDICES = 'class_indices.json'
 
 # 전역 모델, 클래스명
 face_shape_model = None
 face_shape_classes = []
 
 def load_face_shape_model():
-    """얼굴형 모델을 로드한다. 파일이 없거나 오류가 발생하면 안전하게 건너뛴다."""
     global face_shape_model, face_shape_classes
     if face_shape_model is not None and face_shape_classes:
         return  # 이미 로드됨
-
-    if not os.path.exists(FACE_MODEL_JSON) or not os.path.exists(FACE_MODEL_WEIGHTS):
-        logging.warning("Face shape model files not found. Skip loading.")
-        face_shape_model = None
-        face_shape_classes = []
-        return
-
-    try:
-        with open(FACE_MODEL_JSON, encoding='utf-8') as f:
-            face_shape_model = keras.models.model_from_json(f.read())
-        face_shape_model.load_weights(FACE_MODEL_WEIGHTS)
-
-        if os.path.exists(CLASS_INDICES):
-            with open(CLASS_INDICES, encoding='utf-8') as f:
-                index_map = json.load(f)
-            face_shape_classes = [k for k, _ in sorted(index_map.items(), key=lambda x: x[1])]
-        logging.info("Face shape model loaded")
-    except Exception as e:
-        logging.error(f"Failed to load face shape model: {e}")
-        face_shape_model = None
-        face_shape_classes = []
+    with open(FACE_MODEL_JSON, encoding='utf-8') as f:
+        face_shape_model = keras.models.model_from_json(f.read())
+    face_shape_model.load_weights(FACE_MODEL_WEIGHTS)
+    with open(CLASS_INDICES, encoding='utf-8') as f:
+        index_map = json.load(f)
+        face_shape_classes.clear()
+        for k, v in sorted(index_map.items(), key=lambda x: x[1]):
+            face_shape_classes.append(k)
+load_face_shape_model()
 
 def predict_face_shape(img_path):
-    """얼굴형을 예측한다. 모델이 없을 경우 Unknown을 반환한다."""
-    if face_shape_model is None or not face_shape_classes:
-        return "Unknown", 0.0
     try:
         # 이미지 불러오기 & 전처리 (224x224, RGB, 정규화)
         img = Image.open(img_path).convert("RGB").resize((224, 224))
         arr = np.array(img, dtype=np.float32) / 255.0
         arr = np.expand_dims(arr, axis=0)
         preds = face_shape_model.predict(arr)
-        idx = np.argmax(preds)
+        idx = int(np.argmax(preds))
         prob = float(np.max(preds))
-        label = face_shape_classes[idx]
+        label = face_shape_classes[idx] if idx < len(face_shape_classes) else "Unknown"
         return label, prob
     except Exception as e:
         logger.error(f"얼굴형 예측 오류: {e}")
@@ -321,6 +304,7 @@ def upload_file():
             temp_path = temp_file.name
         try:
             analysis_result = analyze_face(temp_path)
+            face_shape, face_prob = predict_face_shape(temp_path)
             selected_genres = request.form.getlist('genre')
             allowed_genres = ['액션', '코미디', '드라마', '공포', '로맨스', 'SF', '다큐멘터리', '애니메이션']
             selected_genres = [g for g in selected_genres if g in allowed_genres]
@@ -344,7 +328,7 @@ def upload_file():
                 str(analysis_result['emotion_scores']),
                 genres_str,
                 file_hash,
-                'Unknown',
+                face_shape,
                 client_ip,
                 user_agent
             ))
@@ -358,7 +342,8 @@ def upload_file():
                 emotion=analysis_result['emotion'],
                 confidence=analysis_result['emotion_confidence'],
                 emotion_scores=analysis_result['emotion_scores'],
-                selected_genres=selected_genres)
+                selected_genres=selected_genres,
+                face_shape=face_shape)
         finally:
             try:
                 os.unlink(temp_path)
@@ -706,6 +691,9 @@ def generate_insights(df):
     except Exception as e:
         logger.error(f"Insight generation error: {e}")
         return ["데이터 인사이트를 생성하는 중 오류가 발생했습니다."]
+
+# 추가 라우트 로드
+import app_extra_routes
 
 if __name__ == '__main__':
     # 최초 실행 시 DB 자동 생성

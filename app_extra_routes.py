@@ -1,3 +1,11 @@
+from flask import render_template
+from app import app, DB_PATH
+import sqlite3
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import base64
+from io import BytesIO
 
 @app.route('/correlation')
 def correlation():
