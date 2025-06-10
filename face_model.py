@@ -1,3 +1,7 @@
+{
+  "python.createEnvironment.trigger": "off"
+}
+```수동으로 venv를 만들고, Python 인터프리터를 선택하려면 **Python: Select Interpreter** 명령을 사용하세요.
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 from tensorflow import keras

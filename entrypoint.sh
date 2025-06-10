@@ -1,5 +1,9 @@
-# Example content
+#!/bin/sh
+# Start the application with gunicorn. Any command line arguments
+# are ignored so the container always launches the API server.
 echo "Starting the application..."
-exec "$@"
+exec gunicorn --workers=1 --timeout=7200 --bind=0.0.0.0:5000 \
+    --log-level=debug \
+    --access-logformat='%(h)s - - [%(t)s] "%(r)s" %(s)s %(b)s %(L)s' \
+    --access-logfile=- "app:create_app()"
 
-gunicorn --workers=1 --timeout=7200 --bind=0.0.0.0:5000 --log-level=debug --access-logformat='%(h)s - - [%(t)s] "%(r)s" %(s)s %(b)s %(L)s' --access-logfile=- "app:create_app()"
