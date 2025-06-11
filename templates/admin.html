@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -77,18 +76,19 @@
             <p>업로드된 얼굴 분석 결과와 영화 취향을 확인하세요.</p>
         </div>
 
-        {{ table_html | safe }}
-
-        <div class="nav-links">
-            <a href="/" class="nav-link"><i class="fas fa-home"></i> 홈으로</a>
+        <!-- 관리자 전용 네비게이션만 표시 -->
+        <div class="admin-nav-links" style="margin-bottom:30px; text-align:center;">
+            <a href="/" class="nav-link"><i class="fas fa-home"></i> 홈</a>
             <a href="/graph" class="nav-link"><i class="fas fa-chart-bar"></i> 통계</a>
             <a href="/recommend" class="nav-link"><i class="fas fa-thumbs-up"></i> 추천</a>
-            <a href="/correlation" class="nav-link"><i class="fas fa-project-diagram"></i> 상관분석</a>
-            <a href="/cluster" class="nav-link"><i class="fas fa-users"></i> 클러스터</a>
-            <a href="/train_mlp" class="nav-link"><i class="fas fa-robot"></i> MLP학습</a>
-            <a href="/export" class="nav-link"><i class="fas fa-download"></i> CSV</a>
-            <a href="/logout" class="nav-link"><i class="fas fa-sign-out-alt"></i> 로그아웃</a>
+            <a href="/correlation" class="nav-link"><i class="fas fa-link"></i> 상관관계분석</a>
+            <a href="/cluster" class="nav-link"><i class="fas fa-project-diagram"></i> 클러스터</a>
+            <a href="/train_mlp" class="nav-link"><i class="fas fa-brain"></i> MLP학습</a>
+            <a href="/download_csv" class="nav-link"><i class="fas fa-download"></i> CSV다운로드</a>
+            <a href="/admin_logout" class="nav-link"><i class="fas fa-sign-out-alt"></i> 로그아웃</a>
         </div>
+
+        {{ table_html | safe }}
     </div>
 </body>
 </html>
