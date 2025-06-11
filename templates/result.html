@@ -181,9 +181,15 @@
             <ul class="result-list">
                 <li><strong>나이:</strong> {{ age }}세</li>
                 <li><strong>성별:</strong> {{ gender }} (신뢰도 {{ gender_confidence|round(1) }}%)</li>
-                <li><strong>감정:</strong> {{ emotion }} (신뢰도 {{ confidence|round(1) }}%)</li>
+                <li><strong>감정:</strong> {{ emotion }} (신뢰도 {{ emotion_confidence|round(1) }}%)</li>
                 <li><strong>얼굴형:</strong> {{ face_shape }}</li>
+                <li><strong>얼굴형 분류 모델 버전:</strong> v{{ model_version }}</li>
             </ul>
+            {% if filename %}
+            <div style="margin-top:15px;text-align:center;">
+                <img src="/uploads/{{ filename }}" alt="업로드 이미지" style="max-width:180px;border-radius:12px;box-shadow:0 2px 8px #ccc;">
+            </div>
+            {% endif %}
         </div>
 
         <div class="result-box">

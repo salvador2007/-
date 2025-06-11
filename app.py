@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
 import sqlite3
 import os
 import pandas as pd
@@ -37,6 +37,9 @@ DEFAULT_FACE_SHAPE_CLASSES = [
     "Square",
     "Triangle",
 ]
+
+# 얼굴형 분류 모델 버전 정보 (논문/보고서/시스템 설명용)
+FACE_SHAPE_MODEL_VERSION = "5.0"
 
 # 전역 모델, 클래스명
 face_shape_model = None
@@ -317,227 +320,18 @@ def index():
         flash(f"DeepFace library is not installed or failed to import.<br><small>{deepface_import_error}</small>", "error")
     return render_template('index.html')
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    try:
-        if 'photo' not in request.files:
-            flash('파일이 선택되지 않았습니다.', 'error')
-            return redirect(url_for('index'))
-        file = request.files['photo']
-        if file.filename == '':
-            flash('파일이 선택되지 않았습니다.', 'error')
-            return redirect(url_for('index'))
-        if not allowed_file(file.filename):
-            flash('PNG, JPG, JPEG 파일만 업로드 가능합니다.', 'error')
-            return redirect(url_for('index'))
-        file_content = file.read()
-        if len(file_content) == 0:
-            flash('빈 파일은 업로드할 수 없습니다.', 'error')
-            return redirect(url_for('index'))
-        if not validate_mime_type(file_content):
-            flash('유효하지 않은 이미지 파일입니다.', 'error')
-            return redirect(url_for('index'))
-        file_hash = get_file_hash(file_content)
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT COUNT(*) FROM analysis_results 
-            WHERE filename_hash = ? AND timestamp > datetime('now', '-1 hour')
-        ''', (file_hash,))
-        recent_count = cursor.fetchone()[0]
-        conn.close()
-        if recent_count > 5:
-            flash('같은 파일을 너무 자주 업로드했습니다. 잠시 후 다시 시도해주세요.', 'error')
-            return redirect(url_for('index'))
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg', dir=UPLOAD_FOLDER) as temp_file:
-            temp_file.write(file_content)
-            temp_path = temp_file.name
-        try:
-            analysis_result = analyze_face(temp_path)
-            face_shape, face_prob = predict_face_shape(temp_path)
-            embedding_str = get_face_embedding(temp_path)
-            selected_genres = request.form.getlist('genre')
-            allowed_genres = ['액션', '코미디', '드라마', '공포', '로맨스', 'SF', '다큐멘터리', '애니메이션']
-            selected_genres = [g for g in selected_genres if g in allowed_genres]
-            genres_str = ', '.join(selected_genres[:10])
-            client_ip = get_client_ip()
-            user_agent = sanitize_user_agent()
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO analysis_results
-                (timestamp, age, gender, gender_confidence, emotion, emotion_confidence,
-                emotion_scores, genres, filename_hash, face_shape, embedding, ip_address, user_agent)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                analysis_result['age'],
-                analysis_result['gender'],
-                analysis_result['gender_confidence'],
-                analysis_result['emotion'],
-                analysis_result['emotion_confidence'],
-                str(analysis_result['emotion_scores']),
-                genres_str,
-                file_hash,
-                face_shape,
-                embedding_str,
-                client_ip,
-                user_agent
-            ))
-            conn.commit()
-            conn.close()
-            logger.info(f"Analysis completed for hash: {file_hash}")
-            return render_template('result.html',
-                age=analysis_result['age'],
-                gender=analysis_result['gender'],
-                gender_confidence=analysis_result['gender_confidence'],
-                emotion=analysis_result['emotion'],
-                confidence=analysis_result['emotion_confidence'],
-                emotion_scores=analysis_result['emotion_scores'],
-                selected_genres=selected_genres,
-                face_shape=face_shape)
-        except RuntimeError as e:
-            flash(str(e), 'error')
-            return redirect(url_for('index'))
-        finally:
-            try:
-                os.unlink(temp_path)
-            except Exception as e:
-                logger.warning(f"Failed to delete temp file: {e}")
-    except Exception as e:
-        logger.error(f'파일 처리 중 오류: {str(e)}')
-        flash('파일 처리 중 오류가 발생했습니다. 다시 시도해주세요.', 'error')
-        return redirect(url_for('index'))
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        password = request.form.get('password', '')
-        if len(password) > 200:
-            flash('입력이 너무 깁니다.', 'error')
-            return render_template('login.html')
-        if check_password_hash(ADMIN_PASSWORD_HASH, password):
-            session['logged_in'] = True
-            session['login_time'] = datetime.now().isoformat()
-            logger.info(f"Admin login successful from {get_client_ip()}")
-            return redirect(url_for('admin'))
-        else:
-            logger.warning(f"Failed admin login attempt from {get_client_ip()}")
-            flash('비밀번호가 올바르지 않습니다.', 'error')
-    return render_template('login.html')
-
-@app.route('/logout')
-def logout():
-    logger.info(f"Admin logout from {get_client_ip()}")
-    session.clear()
-    return redirect(url_for('login'))
-
-@app.route('/admin')
-def admin():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT timestamp, age, gender, emotion, genres, filename_hash, ip_address
-            FROM analysis_results 
-            ORDER BY timestamp DESC 
-            LIMIT ?
-        ''', (50,))
-        rows = cursor.fetchall()
-        conn.close()
-        table_html = '''
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>시간</th>
-                    <th>나이</th>
-                    <th>성별</th>
-                    <th>감정</th>
-                    <th>선호 장르</th>
-                    <th>파일 해시</th>
-                    <th>IP 주소</th>
-                </tr>
-            </thead>
-            <tbody>
-        '''
-        for row in rows:
-            escaped_row = [str(cell).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;') for cell in row]
-            table_html += f'''
-                <tr>
-                    <td>{escaped_row[0]}</td>
-                    <td>{escaped_row[1]}</td>
-                    <td>{escaped_row[2]}</td>
-                    <td>{escaped_row[3]}</td>
-                    <td>{escaped_row[4]}</td>
-                    <td>{escaped_row[5]}</td>
-                    <td>{escaped_row[6]}</td>
-                </tr>
-            '''
-        table_html += '</tbody></table>'
-        return render_template('admin.html', table_html=table_html)
-    except Exception as e:
-        logger.error(f'관리자 페이지 데이터 로드 중 오류: {str(e)}')
-        flash('데이터를 불러오는 중 오류가 발생했습니다.', 'error')
-        return render_template('admin.html', table_html='<p>데이터를 불러올 수 없습니다.</p>')
-
-@app.route('/export')
-def export_csv():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        df = pd.read_sql_query("SELECT * FROM analysis_results", conn)
-        conn.close()
-        csv_data = df.to_csv(index=False)
-        return app.response_class(
-            csv_data,
-            mimetype='text/csv',
-            headers={'Content-Disposition': 'attachment; filename="analysis_results.csv"'}
-        )
-    except Exception as e:
-        logger.error(f'CSV export error: {e}')
-        flash('CSV 생성 중 오류가 발생했습니다.', 'error')
-        return redirect(url_for('admin'))
-
-@app.route('/graph')
-def graph():
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        df = pd.read_sql_query("SELECT * FROM analysis_results", conn)
-        conn.close()
-        if df.empty:
-            return render_template('graph.html', 
-                                genre_plot="", 
-                                emotion_plot="", 
-                                face_plot="")
-        genre_plot = create_genre_plot(df)
-        emotion_plot = create_emotion_plot(df)
-        face_plot = create_face_plot(df)
-        return render_template('graph.html',
-                            genre_plot=genre_plot,
-                            emotion_plot=emotion_plot,
-                            face_plot=face_plot)
-    except Exception as e:
-        logger.error(f"Graph generation error: {e}")
-        return render_template('graph.html',
-                            genre_plot="",
-                            emotion_plot="",
-                            face_plot="")
-
 def create_genre_plot(df):
     try:
-        # 한글 폰트 설정 (그래프 그릴 때마다 적용)
+        # 한글 폰트 설정 (NanumGothic 우선 적용)
         import matplotlib
         import matplotlib.font_manager as fm
         available_fonts = {f.name for f in fm.fontManager.ttflist}
-        if 'Malgun Gothic' in available_fonts:
+        if 'NanumGothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'NanumGothic'
+        elif 'Malgun Gothic' in available_fonts:
             matplotlib.rcParams['font.family'] = 'Malgun Gothic'
         elif 'AppleGothic' in available_fonts:
             matplotlib.rcParams['font.family'] = 'AppleGothic'
-        elif 'NanumGothic' in available_fonts:
-            matplotlib.rcParams['font.family'] = 'NanumGothic'
         else:
             matplotlib.rcParams['font.family'] = 'DejaVu Sans'
         matplotlib.rcParams['axes.unicode_minus'] = False
@@ -569,16 +363,16 @@ def create_genre_plot(df):
 
 def create_emotion_plot(df):
     try:
-        # 한글 폰트 설정 (그래프 그릴 때마다 적용)
+        # 한글 폰트 설정 (NanumGothic 우선 적용)
         import matplotlib
         import matplotlib.font_manager as fm
         available_fonts = {f.name for f in fm.fontManager.ttflist}
-        if 'Malgun Gothic' in available_fonts:
+        if 'NanumGothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'NanumGothic'
+        elif 'Malgun Gothic' in available_fonts:
             matplotlib.rcParams['font.family'] = 'Malgun Gothic'
         elif 'AppleGothic' in available_fonts:
             matplotlib.rcParams['font.family'] = 'AppleGothic'
-        elif 'NanumGothic' in available_fonts:
-            matplotlib.rcParams['font.family'] = 'NanumGothic'
         else:
             matplotlib.rcParams['font.family'] = 'DejaVu Sans'
         matplotlib.rcParams['axes.unicode_minus'] = False
@@ -622,16 +416,16 @@ def create_emotion_plot(df):
 
 def create_face_plot(df):
     try:
-        # 한글 폰트 설정 (그래프 그릴 때마다 적용)
+        # 한글 폰트 설정 (NanumGothic 우선 적용)
         import matplotlib
         import matplotlib.font_manager as fm
         available_fonts = {f.name for f in fm.fontManager.ttflist}
-        if 'Malgun Gothic' in available_fonts:
+        if 'NanumGothic' in available_fonts:
+            matplotlib.rcParams['font.family'] = 'NanumGothic'
+        elif 'Malgun Gothic' in available_fonts:
             matplotlib.rcParams['font.family'] = 'Malgun Gothic'
         elif 'AppleGothic' in available_fonts:
             matplotlib.rcParams['font.family'] = 'AppleGothic'
-        elif 'NanumGothic' in available_fonts:
-            matplotlib.rcParams['font.family'] = 'NanumGothic'
         else:
             matplotlib.rcParams['font.family'] = 'DejaVu Sans'
         matplotlib.rcParams['axes.unicode_minus'] = False
@@ -650,7 +444,7 @@ def create_face_plot(df):
                         'genre': genre
                     })
         if not face_genre_data:
-            return ""
+            return None  # 데이터가 없으면 None 반환
         face_df = pd.DataFrame(face_genre_data)
         crosstab = pd.crosstab(face_df['face_shape'], face_df['genre'])
         plt.figure(figsize=(12, 8))
@@ -773,6 +567,156 @@ def generate_insights(df):
 
 # 추가 라우트 로드
 import app_extra_routes
+
+@app.route('/graph')
+def graph():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql_query("SELECT * FROM analysis_results", conn)
+        conn.close()
+        if df.empty:
+            flash('아직 데이터가 없습니다. 이미지를 업로드해 분석을 먼저 진행해주세요.', 'warning')
+            return render_template('graph.html', genre_plot='', emotion_plot='', face_plot='')
+        genre_plot = create_genre_plot(df)
+        emotion_plot = create_emotion_plot(df)
+        face_plot = create_face_plot(df)
+        return render_template('graph.html', genre_plot=genre_plot, emotion_plot=emotion_plot, face_plot=face_plot)
+    except Exception as e:
+        logger.error(f"Graph page error: {e}")
+        flash('그래프를 생성하는 중 오류가 발생했습니다.', 'error')
+        return render_template('graph.html', genre_plot='', emotion_plot='', face_plot='')
+
+@app.route('/admin')
+def admin():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql_query("SELECT * FROM analysis_results ORDER BY id DESC LIMIT 100", conn)
+        conn.close()
+        if df.empty:
+            table_html = '<div style="color:#888; font-size:1.1em; margin:20px 0;">아직 데이터가 없습니다.</div>'
+        else:
+            # 주요 컬럼만 표시, 너무 길면 자름
+            show_cols = ['timestamp', 'age', 'gender', 'emotion', 'genres', 'face_shape']
+            for col in show_cols:
+                if col not in df.columns:
+                    df[col] = ''
+            table_html = df[show_cols].to_html(classes='data-table', index=False, border=0, justify='center')
+        return render_template('admin.html', table_html=table_html)
+    except Exception as e:
+        return render_template('admin.html', table_html=f'<div style="color:red">오류: {e}</div>')
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
+@app.route('/upload', methods=['GET'])
+def upload_get():
+    # GET 요청은 index로 리다이렉트
+    flash('이미지 업로드는 메인 화면에서 진행해주세요.', 'info')
+    return redirect(url_for('index'))
+
+@app.route('/project_info')
+def project_info():
+    """프로젝트 목적 및 전체 과정 요약 페이지 (논문/보고서/발표용)"""
+    info = {
+        "목적": [
+            "얼굴 이미지 기반의 영화 취향 예측 (표정, 얼굴형, 피부톤 등 AI 분석)",
+            "개인 맞춤형 추천 시스템 구현 (기존 나이·성별 기반보다 정교함)",
+            "감정/외형 정보와 콘텐츠 선호도의 상관관계 분석 및 시각화"
+        ],
+        "개발과정": [
+            "데이터 수집 및 전처리: 얼굴 이미지, DeepFace/CNN 분석, DB 저장",
+            f"AI 모델 개발: 얼굴형 분류 CNN (버전 {FACE_SHAPE_MODEL_VERSION}), DeepFace 감정 분석, 패턴 학습",
+            "Flask 웹앱: 업로드, 분석, 추천, 관리자, 통계, 시각화 등 구현",
+            "기능: 자동 얼굴 분석, 결과 시각화, 관리자/통계/상관관계/클러스터링 등"
+        ],
+        "출력/배포": [
+            "전체 ZIP 패키징, 로컬/클라우드 배포, 즉시 실행 가능"
+        ],
+        "활용성": [
+            "AI 기반 개인화 추천 연구, 마케팅, OTT 서비스, GPT 연동 확장성"
+        ],
+        "연동": [
+            f"얼굴형 분류 모델(버전 {FACE_SHAPE_MODEL_VERSION}) 및 DeepFace 분석 결과가 Flask와 실시간 연동되어 DB/추천/시각화에 반영됨"
+        ]
+    }
+    return render_template('project_info.html', info=info, model_version=FACE_SHAPE_MODEL_VERSION)
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    if request.method != 'POST':
+        return redirect(url_for('index'))
+    if 'file' not in request.files:
+        flash('파일이 첨부되지 않았습니다.', 'error')
+        return redirect(url_for('index'))
+    file = request.files['file']
+    if file.filename == '':
+        flash('파일명이 비어 있습니다.', 'error')
+        return redirect(url_for('index'))
+    if not allowed_file(file.filename):
+        flash('허용되지 않는 파일 형식입니다.', 'error')
+        return redirect(url_for('index'))
+    file_content = file.read()
+    if not validate_mime_type(file_content):
+        flash('이미지 파일이 아닙니다.', 'error')
+        return redirect(url_for('index'))
+    file_hash = get_file_hash(file_content)
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    filename = f"{file_hash}.{ext}"
+    save_path = os.path.join(UPLOAD_FOLDER, filename)
+    with open(save_path, 'wb') as f:
+        f.write(file_content)
+    # 얼굴 분석
+    try:
+        face_result = analyze_face(save_path)
+        face_shape, face_shape_prob = predict_face_shape(save_path)
+        embedding = get_face_embedding(save_path)
+    except Exception as e:
+        logger.error(f"분석 실패: {e}")
+        flash('얼굴 분석에 실패했습니다.', 'error')
+        return redirect(url_for('index'))
+    # DB 저장
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO analysis_results (
+                timestamp, age, gender, gender_confidence, emotion, emotion_confidence, emotion_scores, genres, filename_hash, face_shape, embedding, ip_address, user_agent
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            datetime.now().isoformat(),
+            face_result['age'],
+            face_result['gender'],
+            face_result['gender_confidence'],
+            face_result['emotion'],
+            face_result['emotion_confidence'],
+            json.dumps(face_result['emotion_scores'], ensure_ascii=False),
+            '',  # 추천 장르(선택 전)
+            file_hash,
+            face_shape,
+            embedding,
+            get_client_ip(),
+            sanitize_user_agent()
+        ))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"DB 저장 실패: {e}")
+        flash('DB 저장에 실패했습니다.', 'error')
+        return redirect(url_for('index'))
+    # 결과 페이지 렌더링
+    return render_template('result.html', 
+        age=face_result['age'],
+        gender=face_result['gender'],
+        gender_confidence=face_result['gender_confidence'],
+        emotion=face_result['emotion'],
+        emotion_confidence=face_result['emotion_confidence'],
+        emotion_scores=face_result['emotion_scores'],
+        face_shape=face_shape,
+        face_shape_prob=face_shape_prob,
+        filename=filename,
+        model_version=FACE_SHAPE_MODEL_VERSION
+    )
 
 if __name__ == '__main__':
     # 최초 실행 시 DB 자동 생성

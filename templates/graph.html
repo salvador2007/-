@@ -36,7 +36,11 @@
 
         <div class="graph-box">
             <h2>👤 얼굴형별 장르 분포</h2>
+            {% if face_plot %}
             <img src="data:image/png;base64,{{ face_plot }}" alt="얼굴형 그래프">
+            {% else %}
+            <div style="color:#888; font-size:1.1em; margin:20px 0;">얼굴형별 데이터가 부족하여 그래프를 표시할 수 없습니다.</div>
+            {% endif %}
         </div>
     </div>
 </body>

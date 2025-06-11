@@ -1,1 +1,28 @@
-/* 스타일 플레이스홀더 */
+/* 한글 및 다양한 환경 지원 폰트 적용 */
+body, html, .container, .graph-box, h1, h2, h3, p, div, span, input, button, select, textarea {
+    font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', 'Nanum Gothic', '나눔고딕', 'Segoe UI', 'Arial', 'sans-serif';
+}
+
+/* 그래프 이미지 반응형 */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* 추가적인 기본 스타일 (예시) */
+.container {
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    padding: 40px;
+    max-width: 1000px;
+    margin: 40px auto;
+}
+
+.graph-box {
+    margin-bottom: 50px;
+}
+
+h1, h2 {
+    margin-bottom: 15px;
+}

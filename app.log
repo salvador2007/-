@@ -1,0 +1,126 @@
+2025-06-11 00:45:24,246 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:45:24,664 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:45:25,047 - __main__ - INFO - Database initialized successfully
+2025-06-11 00:45:53,553 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:45:53,905 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:45:54,184 - __main__ - INFO - Database initialized successfully
+2025-06-11 00:45:54,188 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-06-11 00:45:54,188 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-11 00:45:54,189 - werkzeug - INFO -  * Restarting with stat
+2025-06-11 00:45:58,264 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:45:58,579 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:45:58,729 - __main__ - INFO - Database initialized successfully
+2025-06-11 00:45:58,734 - werkzeug - WARNING -  * Debugger is active!
+2025-06-11 00:45:58,734 - werkzeug - INFO -  * Debugger PIN: 813-670-967
+2025-06-11 00:46:01,287 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:46:01] "GET / HTTP/1.1" 200 -
+2025-06-11 00:46:03,989 - __main__ - WARNING - 404 error for http://localhost:5000/graph
+2025-06-11 00:46:03,991 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:46:03] "[33mGET /graph HTTP/1.1[0m" 404 -
+2025-06-11 00:46:05,576 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:46:05] "GET / HTTP/1.1" 200 -
+2025-06-11 00:46:27,444 - __main__ - WARNING - 404 error for http://localhost:5000/upload
+2025-06-11 00:46:27,445 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:46:27] "[33mPOST /upload HTTP/1.1[0m" 404 -
+2025-06-11 00:46:29,886 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:46:29] "GET / HTTP/1.1" 200 -
+2025-06-11 00:49:09,209 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:49:09,624 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:49:09,863 - __main__ - INFO - Database initialized successfully
+2025-06-11 00:49:09,868 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-06-11 00:49:09,868 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-11 00:49:09,869 - werkzeug - INFO -  * Restarting with stat
+2025-06-11 00:49:13,771 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:49:14,213 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:49:14,369 - __main__ - INFO - Database initialized successfully
+2025-06-11 00:49:14,372 - werkzeug - WARNING -  * Debugger is active!
+2025-06-11 00:49:14,373 - werkzeug - INFO -  * Debugger PIN: 813-670-967
+2025-06-11 00:49:14,926 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:49:14] "GET / HTTP/1.1" 200 -
+2025-06-11 00:49:17,897 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:49:17] "GET /graph HTTP/1.1" 200 -
+2025-06-11 00:49:18,213 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:49:18] "GET /static/style.css HTTP/1.1" 200 -
+2025-06-11 00:49:22,479 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:49:22] "GET / HTTP/1.1" 200 -
+2025-06-11 00:49:23,856 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:49:23] "GET /recommend HTTP/1.1" 200 -
+2025-06-11 00:49:27,323 - __main__ - WARNING - 404 error for http://localhost:5000/admin
+2025-06-11 00:49:27,325 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:49:27] "[33mGET /admin HTTP/1.1[0m" 404 -
+2025-06-11 00:49:28,626 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:49:28] "GET / HTTP/1.1" 200 -
+2025-06-11 00:49:42,984 - __main__ - WARNING - 404 error for http://localhost:5000/upload
+2025-06-11 00:49:42,986 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:49:42] "[33mPOST /upload HTTP/1.1[0m" 404 -
+2025-06-11 00:53:22,858 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:53:23,148 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:53:23,391 - __main__ - INFO - Database initialized successfully
+2025-06-11 00:53:23,395 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-06-11 00:53:23,395 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-11 00:53:23,396 - werkzeug - INFO -  * Restarting with stat
+2025-06-11 00:53:27,552 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:53:27,836 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 00:53:28,010 - __main__ - INFO - Database initialized successfully
+2025-06-11 00:53:28,015 - werkzeug - WARNING -  * Debugger is active!
+2025-06-11 00:53:28,015 - werkzeug - INFO -  * Debugger PIN: 813-670-967
+2025-06-11 00:53:28,481 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:53:28] "GET / HTTP/1.1" 200 -
+2025-06-11 00:54:34,505 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:54:34] "GET / HTTP/1.1" 200 -
+2025-06-11 00:54:37,514 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:54:37] "GET /graph HTTP/1.1" 200 -
+2025-06-11 00:54:37,786 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:54:37] "GET /static/style.css HTTP/1.1" 200 -
+2025-06-11 00:55:16,595 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:55:16] "GET / HTTP/1.1" 200 -
+2025-06-11 00:55:19,311 - __main__ - WARNING - 404 error for http://localhost:5000/admin
+2025-06-11 00:55:19,317 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:55:19] "[33mGET /admin HTTP/1.1[0m" 404 -
+2025-06-11 00:55:21,038 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:55:21] "GET / HTTP/1.1" 200 -
+2025-06-11 00:55:23,280 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:55:23] "GET /recommend HTTP/1.1" 200 -
+2025-06-11 00:55:40,860 - __main__ - WARNING - 404 error for http://localhost:5000/upload
+2025-06-11 00:55:40,860 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 00:55:40] "[33mPOST /upload HTTP/1.1[0m" 404 -
+2025-06-11 01:10:21,236 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 01:10:21,586 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 01:10:21,990 - __main__ - INFO - Database initialized successfully
+2025-06-11 01:10:21,996 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-06-11 01:10:21,996 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-11 01:10:21,997 - werkzeug - INFO -  * Restarting with stat
+2025-06-11 01:10:26,394 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 01:10:26,710 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 01:10:26,861 - __main__ - INFO - Database initialized successfully
+2025-06-11 01:10:26,865 - werkzeug - WARNING -  * Debugger is active!
+2025-06-11 01:10:26,885 - werkzeug - INFO -  * Debugger PIN: 813-670-967
+2025-06-11 01:10:29,365 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:29] "GET / HTTP/1.1" 200 -
+2025-06-11 01:10:32,094 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:32] "GET /graph HTTP/1.1" 200 -
+2025-06-11 01:10:32,535 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:32] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-11 01:10:38,198 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:38] "GET / HTTP/1.1" 200 -
+2025-06-11 01:10:39,657 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:39] "GET /recommend HTTP/1.1" 200 -
+2025-06-11 01:10:41,885 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:41] "GET /admin HTTP/1.1" 200 -
+2025-06-11 01:10:46,298 - __main__ - WARNING - 404 error for http://localhost:5000/correlation
+2025-06-11 01:10:46,301 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:46] "[33mGET /correlation HTTP/1.1[0m" 404 -
+2025-06-11 01:10:47,946 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:47] "GET / HTTP/1.1" 200 -
+2025-06-11 01:10:50,356 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:50] "GET /admin HTTP/1.1" 200 -
+2025-06-11 01:10:51,804 - __main__ - WARNING - 404 error for http://localhost:5000/cluster
+2025-06-11 01:10:51,807 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:51] "[33mGET /cluster HTTP/1.1[0m" 404 -
+2025-06-11 01:10:53,197 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:53] "GET / HTTP/1.1" 200 -
+2025-06-11 01:10:54,918 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:54] "GET /admin HTTP/1.1" 200 -
+2025-06-11 01:10:56,995 - __main__ - WARNING - 404 error for http://localhost:5000/train_mlp
+2025-06-11 01:10:56,996 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:56] "[33mGET /train_mlp HTTP/1.1[0m" 404 -
+2025-06-11 01:10:58,365 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:10:58] "GET / HTTP/1.1" 200 -
+2025-06-11 01:11:00,083 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:11:00] "GET /admin HTTP/1.1" 200 -
+2025-06-11 01:11:01,033 - __main__ - WARNING - 404 error for http://localhost:5000/export
+2025-06-11 01:11:01,034 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:11:01] "[33mGET /export HTTP/1.1[0m" 404 -
+2025-06-11 01:11:02,597 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:11:02] "GET / HTTP/1.1" 200 -
+2025-06-11 01:11:04,345 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:11:04] "GET /admin HTTP/1.1" 200 -
+2025-06-11 01:11:34,743 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:11:34] "GET / HTTP/1.1" 200 -
+2025-06-11 01:11:36,972 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:11:36] "GET /graph HTTP/1.1" 200 -
+2025-06-11 01:11:37,193 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:11:37] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-11 01:12:09,873 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:12:09] "GET / HTTP/1.1" 200 -
+2025-06-11 01:12:11,815 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:12:11] "GET /admin HTTP/1.1" 200 -
+2025-06-11 01:12:26,483 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:12:26] "GET / HTTP/1.1" 200 -
+2025-06-11 01:12:38,723 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:12:38] "[31m[1mPOST /upload HTTP/1.1[0m" 405 -
+2025-06-11 01:14:22,043 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:14:22] "GET /graph HTTP/1.1" 200 -
+2025-06-11 01:14:22,299 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:14:22] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-11 01:14:35,101 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:14:35] "GET /recommend HTTP/1.1" 200 -
+2025-06-11 01:14:40,543 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2025 01:14:40] "GET /admin HTTP/1.1" 200 -
+2025-06-11 01:15:53,254 - werkzeug - INFO -  * Detected change in '/workspaces/-/app.py', reloading
+2025-06-11 01:15:55,165 - werkzeug - INFO -  * Restarting with stat
+2025-06-11 01:16:01,184 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 01:16:01,489 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 01:16:01,730 - __main__ - INFO - Database initialized successfully
+2025-06-11 01:16:01,737 - werkzeug - WARNING -  * Debugger is active!
+2025-06-11 01:16:01,754 - werkzeug - INFO -  * Debugger PIN: 813-670-967
+2025-06-11 01:18:52,271 - werkzeug - INFO -  * Detected change in '/workspaces/-/app.py', reloading
+2025-06-11 01:18:53,034 - werkzeug - INFO -  * Restarting with stat
+2025-06-11 01:19:00,122 - __main__ - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 01:19:00,455 - app - ERROR - Face shape model load error: Layer 'conv2d' expected 2 variables, but received 0 variables during loading. Expected: ['conv2d/kernel:0', 'conv2d/bias:0']
+2025-06-11 01:19:00,835 - __main__ - INFO - Database initialized successfully
+2025-06-11 01:19:00,887 - werkzeug - WARNING -  * Debugger is active!
+2025-06-11 01:19:00,912 - werkzeug - INFO -  * Debugger PIN: 813-670-967
