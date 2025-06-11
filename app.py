@@ -112,9 +112,9 @@ def load_face_shape_model():
         logger.error("Face shape model is NOT ready. 얼굴형 분류 기능이 비활성화됩니다.")
 
 def predict_face_shape(img_path):
-    if face_shape_model is None:
-        return "Unknown", 0.0
     try:
+        if face_shape_model is None:
+            return "Unknown", 0.0
         # 이미지 불러오기 & 전처리 (224x224, RGB, 정규화)
         img = Image.open(img_path).convert("RGB").resize((224, 224))
         arr = np.array(img, dtype=np.float32) / 255.0
@@ -125,7 +125,7 @@ def predict_face_shape(img_path):
         label = face_shape_classes[idx] if idx < len(face_shape_classes) else "Unknown"
         return label, prob
     except Exception as e:
-        logger.error(f"얼굴형 예측 오류: {e}")
+        logger.error(f"얼굴형 예측 오류(치명적): {e}")
         return "Unknown", 0.0
 
 # DeepFace 임포트 및 에러 메시지 저장
@@ -261,11 +261,11 @@ def sanitize_user_agent():
 
 def analyze_face(image_path):
     """얼굴 분석 함수 (DeepFace 사용)"""
-    if not DEEPFACE_AVAILABLE:
-        raise RuntimeError(
-            "DeepFace library is not installed. Install requirements for accurate analysis."
-        )
     try:
+        if not DEEPFACE_AVAILABLE:
+            raise RuntimeError(
+                "DeepFace library is not installed. Install requirements for accurate analysis."
+            )
         analysis = DeepFace.analyze(
             img_path=image_path,
             actions=['age', 'gender', 'emotion'],
@@ -294,7 +294,7 @@ def analyze_face(image_path):
             'emotion_scores': emotion_scores
         }
     except Exception as e:
-        logger.error(f"Face analysis error: {e}")
+        logger.error(f"Face analysis error(치명적): {e}")
         return {
             'age': 25,
             'gender': 'Unknown',
@@ -802,6 +802,7 @@ def upload():
         ))
         conn.commit()
         conn.close()
+        logger.info("DB 저장 성공")
     except Exception as e:
         logger.error(f"DB 저장 실패: {e}")
         flash('DB 저장에 실패했습니다.', 'error')
@@ -820,6 +821,12 @@ def upload():
         model_version=FACE_SHAPE_MODEL_VERSION
     )
 
+from pyngrok import ngrok
+
 if __name__ == "__main__":
-    # 개발/테스트 환경에서는 0.0.0.0:5000으로 실행 (외부 접속 허용)
+    # ngrok 터널 생성
+    public_url = ngrok.connect(5000)
+    print(f"ngrok public URL: {public_url}")
+
+    # Flask 서버 실행
     app.run(host="0.0.0.0", port=5000, debug=True)
