@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory, send_file
 import sqlite3
 import os
 import pandas as pd
@@ -46,33 +46,70 @@ face_shape_model = None
 face_shape_classes = []
 
 def load_face_shape_model():
+    """얼굴형 분류 모델 로드 (.keras 우선, 없으면 json+weights fallback)"""
     global face_shape_model, face_shape_classes
-    if face_shape_model is not None and face_shape_classes:
-        return  # 이미 로드됨
-    if not (os.path.exists(FACE_MODEL_JSON) and os.path.exists(FACE_MODEL_WEIGHTS)):
-        logger.warning("Face shape model files not found. Feature disabled.")
-        face_shape_model = None
-        face_shape_classes = []
-        return
+    import json
     try:
-        with open(FACE_MODEL_JSON, encoding='utf-8') as f:
-            face_shape_model = keras.models.model_from_json(f.read())
-        face_shape_model.load_weights(FACE_MODEL_WEIGHTS)
+        keras_path = os.path.join(MODEL_DIR, 'face_shape_optimized_model.keras')
+        if os.path.exists(keras_path):
+            try:
+                face_shape_model = keras.models.load_model(keras_path, compile=False)
+                logger.info(f"얼굴형 분류 모델(.keras, compile=False) 로드 성공: {keras_path}")
+            except Exception as e:
+                logger.error(f"얼굴형 분류 모델(.keras, compile=False) 로드 실패: {e}")
+                face_shape_model = None
+        else:
+            # fallback: json+weights 여러 조합 시도
+            weights_candidates = [
+                os.path.join(CHECKPOINT_DIR, 'best_face_shape_optimized_model_01_0.1990.weights.h5'),
+                os.path.join(CHECKPOINT_DIR, 'best_face_shape_optimized_model_02_0.2010.weights.h5'),
+                os.path.join(MODEL_DIR, 'face_shape_optimized_model.weights.h5'),
+                os.path.join(MODEL_DIR, 'face_shape_optimized_model_emergency.weights.h5'),
+            ]
+            loaded = False
+            if os.path.exists(FACE_MODEL_JSON):
+                with open(FACE_MODEL_JSON, 'r', encoding='utf-8') as f:
+                    model_json = f.read()
+                for weights_path in weights_candidates:
+                    if os.path.exists(weights_path):
+                        try:
+                            model = keras.models.model_from_json(model_json)
+                            model.load_weights(weights_path)
+                            face_shape_model = model
+                            logger.info(f"얼굴형 분류 모델(json+weights) 로드 성공: {FACE_MODEL_JSON}, {weights_path}")
+                            loaded = True
+                            break
+                        except Exception as e2:
+                            logger.error(f"얼굴형 분류 모델(json+weights) 로드 실패: {weights_path}, {e2}")
+                if not loaded:
+                    logger.error("얼굴형 분류 모델 json+weights 조합이 모두 실패했습니다.")
+                    face_shape_model = None
+            else:
+                logger.error("얼굴형 분류 모델 구조(json) 파일이 존재하지 않습니다.")
+                face_shape_model = None
+    except Exception as e:
+        logger.error(f"얼굴형 분류 모델(.keras) 로드 실패: {e}")
+        face_shape_model = None
+    # 클래스 인덱스 로드
+    try:
         if os.path.exists(CLASS_INDICES):
-            with open(CLASS_INDICES, encoding='utf-8') as f:
-                index_map = json.load(f)
+            with open(CLASS_INDICES, 'r', encoding='utf-8') as f:
+                idx_map = json.load(f)
             face_shape_classes.clear()
-            for k, v in sorted(index_map.items(), key=lambda x: x[1]):
+            for k, v in sorted(idx_map.items(), key=lambda x: x[1]):
                 face_shape_classes.append(k)
         else:
-            # class_indices.json이 없을 경우 기본 라벨 사용
-            face_shape_classes[:] = DEFAULT_FACE_SHAPE_CLASSES
-            logger.warning("class_indices.json not found. Using default labels.")
-        logger.info("Face shape model loaded")
+            face_shape_classes.clear()
+            face_shape_classes.extend(DEFAULT_FACE_SHAPE_CLASSES)
     except Exception as e:
-        logger.error(f"Face shape model load error: {e}")
-        face_shape_model = None
-        face_shape_classes = []
+        logger.error(f"Face shape class index load error: {e}")
+        face_shape_classes.clear()
+        face_shape_classes.extend(DEFAULT_FACE_SHAPE_CLASSES)
+    # 최종 상태 로그
+    if face_shape_model is not None:
+        logger.info("Face shape model loaded and ready.")
+    else:
+        logger.error("Face shape model is NOT ready. 얼굴형 분류 기능이 비활성화됩니다.")
 
 def predict_face_shape(img_path):
     if face_shape_model is None:
@@ -565,8 +602,68 @@ def generate_insights(df):
         logger.error(f"Insight generation error: {e}")
         return ["데이터 인사이트를 생성하는 중 오류가 발생했습니다."]
 
-# 추가 라우트 로드
+# --- 관리자 인증 데코레이터 ---
+def admin_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('is_admin'):
+            flash('관리자 로그인 후 이용 가능합니다.', 'error')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# --- 관리자 로그인 라우트 ---
+@app.route('/admin_login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        if check_password_hash(ADMIN_PASSWORD_HASH, password):
+            session['is_admin'] = True
+            flash('관리자 로그인 성공', 'success')
+            return redirect(url_for('admin'))
+        else:
+            flash('비밀번호가 올바르지 않습니다.', 'error')
+    return render_template('admin_login.html')
+
+@app.route('/admin_logout')
+def admin_logout():
+    session.pop('is_admin', None)
+    flash('로그아웃되었습니다.', 'info')
+    return redirect(url_for('index'))
+
+# --- app_extra_routes.py의 라우트 등록 (Flask blueprint 방식이 아니면 직접 import) ---
 import app_extra_routes
+
+# --- 관리자 전용 라우트에 인증 적용 (import 이후에 적용!) ---
+for func_name in ['correlation', 'cluster_view', 'train_mlp']:
+    if func_name in app.view_functions:
+        app.view_functions[func_name] = admin_required(app.view_functions[func_name])
+
+# download_csv는 직접 데코레이터 적용
+@app.route('/download_csv')
+@admin_required
+def download_csv():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql_query("SELECT * FROM analysis_results", conn)
+        conn.close()
+        if df.empty:
+            flash('다운로드할 데이터가 없습니다.', 'warning')
+            return redirect(url_for('index'))
+        csv_io = BytesIO()
+        df.to_csv(csv_io, index=False, encoding='utf-8-sig')
+        csv_io.seek(0)
+        return send_file(
+            csv_io,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f"analysis_results_{datetime.now().strftime('%Y%m%d')}.csv"
+        )
+    except Exception as e:
+        logger.error(f"CSV 다운로드 실패: {e}")
+        flash('CSV 다운로드 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/graph')
 def graph():
@@ -669,7 +766,12 @@ def upload():
     # 얼굴 분석
     try:
         face_result = analyze_face(save_path)
-        face_shape, face_shape_prob = predict_face_shape(save_path)
+        if face_shape_model is None:
+            face_shape = "Unknown"
+            face_shape_prob = 0.0
+            flash('⚠️ 얼굴형 분류 모델이 준비되지 않아 얼굴형 분석 결과는 제공되지 않습니다.', 'warning')
+        else:
+            face_shape, face_shape_prob = predict_face_shape(save_path)
         embedding = get_face_embedding(save_path)
     except Exception as e:
         logger.error(f"분석 실패: {e}")
@@ -718,7 +820,6 @@ def upload():
         model_version=FACE_SHAPE_MODEL_VERSION
     )
 
-if __name__ == '__main__':
-    # 최초 실행 시 DB 자동 생성
-    init_db()
-    app.run(debug=True)
+if __name__ == "__main__":
+    # 개발/테스트 환경에서는 0.0.0.0:5000으로 실행 (외부 접속 허용)
+    app.run(host="0.0.0.0", port=5000, debug=True)

@@ -367,8 +367,8 @@
         <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
             <div class="upload-section">
                 <div class="file-input-wrapper">
-                    <input type="file" id="photo" name="photo" class="file-input" accept="image/*" required>
-                    <label for="photo" class="file-input-label" id="fileLabel">
+                    <input type="file" id="file" name="file" class="file-input" accept="image/*" required>
+                    <label for="file" class="file-input-label" id="fileLabel">
                         <i class="fas fa-cloud-upload-alt"></i>
                         <span id="labelText">사진 선택하기</span>
                     </label>
@@ -438,6 +438,13 @@
                 <i class="fas fa-cog"></i> 관리
             </a>
         </div>
+
+        <div class="nav-links" style="margin-top:30px;">
+            <a href="/correlation" class="nav-link"><i class="fas fa-link"></i> 상관관계분석</a>
+            <a href="/cluster" class="nav-link"><i class="fas fa-project-diagram"></i> 클러스터</a>
+            <a href="/train_mlp" class="nav-link"><i class="fas fa-brain"></i> MLP학습</a>
+            <a href="/download_csv" class="nav-link"><i class="fas fa-download"></i> CSV다운로드</a>
+        </div>
     </div>
 
     <div class="loading-overlay" id="loadingOverlay">
@@ -450,7 +457,7 @@
 
     <script>
         // 파일 선택 처리
-        document.getElementById('photo').addEventListener('change', function(e) {
+        document.getElementById('file').addEventListener('change', function(e) {
             const file = e.target.files[0];
             const label = document.getElementById('fileLabel');
             const labelText = document.getElementById('labelText');
@@ -508,7 +515,7 @@
 
         // 폼 제출 처리
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            const fileInput = document.getElementById('photo');
+            const fileInput = document.getElementById('file');
             const submitBtn = document.getElementById('submitBtn');
             const loadingOverlay = document.getElementById('loadingOverlay');
 
@@ -527,7 +534,7 @@
 
         // 드래그 앤 드롭 기능
         const fileLabel = document.getElementById('fileLabel');
-        const fileInput = document.getElementById('photo');
+        const fileInput = document.getElementById('file');
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             fileLabel.addEventListener(eventName, preventDefaults, false);

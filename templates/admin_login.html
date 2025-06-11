@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 로그인</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { background: #f3f4f8; }
+        .login-container { max-width: 400px; margin: 80px auto; background: #fff; border-radius: 16px; box-shadow: 0 0 20px rgba(0,0,0,0.08); padding: 40px; text-align: center; }
+        .login-title { font-size: 1.5em; margin-bottom: 20px; }
+        .login-input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ccc; }
+        .login-btn { width: 100%; padding: 12px; background: #667eea; color: #fff; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; }
+        .login-btn:hover { background: #5a67d8; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-title">🔒 관리자 로그인</div>
+        <form method="post">
+            <input type="password" name="password" class="login-input" placeholder="관리자 비밀번호" required>
+            <button type="submit" class="login-btn">로그인</button>
+        </form>
+        <div style="margin-top:20px;">
+            <a href="/">홈으로</a>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul style="margin-top:20px;">
+            {% for category, message in messages %}
+                <li style="color: {% if category == 'error' %}red{% elif category == 'success' %}green{% else %}#333{% endif %};">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>
